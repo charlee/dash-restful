@@ -7,7 +7,7 @@ A JavaScript restful client using fetch interface.
 The simplest way is to create an API object and use it to access the endpoints:
 
 ```typescript
-import API from 'dash-restful';
+import DashApi from 'dash-restful';
 
 type Book = {
   id: number;
@@ -16,7 +16,7 @@ type Book = {
 };
 
 // Create an api instance and use the low level API
-const api = API('https://api.example.com/');
+const api = DashApi('https://api.example.com/');
 
 api
   .post<Book>('/books/', {
