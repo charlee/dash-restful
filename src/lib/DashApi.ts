@@ -137,6 +137,78 @@ class DashAPI {
   postForm<T>(path: string, formBody: ApiRequestFormBody, params?: HttpParams) {
     return this.request<T>(path, 'POST', { params, formBody }) as Promise<T>;
   }
+
+  createResource<T>(name: string, params?: HttpParams) {
+    return new DashResource<T>(this, name, params);
+  }
+}
+
+/**
+ * params: The query params attached to all queries.
+ */
+export class DashResource<T> {
+  constructor(
+    protected api: DashAPI,
+    protected name: string,
+    protected params?: HttpParams
+  ) {}
+
+  protected mergeParams(params?: HttpParams) {
+    return { ...(this.params ?? {}), ...(params ?? {}) };
+  }
+
+  list(params?: HttpParams): Promise<T[]> {
+    return this.api.get<T[]>(`${this.name}/`, this.mergeParams(params));
+  }
+
+  retrieve(id: number): Promise<T> {
+    return this.api.get<T>(`${this.name}/${id}/`, this.params);
+  }
+
+  create(object: Partial<T>): Promise<T> {
+    return this.api.post<T>(`${this.name}/`, object);
+  }
+
+  update(id: number, object: Partial<T>): Promise<T> {
+    return this.api.put<T>(`${this.name}/${id}/`, object);
+  }
+
+  patch(id: number, object: Partial<T>): Promise<T> {
+    return this.api.patch<T>(`${this.name}/${id}/`, object);
+  }
+
+  delete(id: number): Promise<void> {
+    return this.api.delete<void>(`${this.name}/${id}/`);
+  }
+
+  getAction<R>(action: string, params: HttpParams): Promise<R> {
+    return this.api.get<R>(`${this.name}/${action}/`, params);
+  }
+
+  postAction<R>(
+    action: string,
+    body: Record<string, unknown>,
+    params?: HttpParams
+  ): Promise<R> {
+    return this.api.post<R>(`${this.name}/${action}/`, body, params);
+  }
+
+  postDetailAction<T>(
+    action: string,
+    id: number,
+    body: Record<string, unknown>,
+    params?: HttpParams
+  ): Promise<T> {
+    return this.api.post<T>(`${this.name}/${id}/${action}/`, body, params);
+  }
+
+  postForm<R>(
+    action: string,
+    formBody: ApiRequestFormBody,
+    params?: HttpParams
+  ): Promise<R> {
+    return this.api.postForm<R>(`${this.name}/${action}/`, formBody, params);
+  }
 }
 
 export default DashAPI;
