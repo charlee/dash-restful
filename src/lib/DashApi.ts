@@ -181,7 +181,7 @@ export class DashResource<T> {
     return this.api.delete<void>(`${this.name}/${id}/`);
   }
 
-  getAction<R>(action: string, params: HttpParams): Promise<R> {
+  getAction<R>(action: string, params?: HttpParams): Promise<R> {
     return this.api.get<R>(`${this.name}/${action}/`, params);
   }
 
@@ -191,6 +191,14 @@ export class DashResource<T> {
     params?: HttpParams
   ): Promise<R> {
     return this.api.post<R>(`${this.name}/${action}/`, body, params);
+  }
+
+  getDetailAction<R>(
+    action: string,
+    id: number,
+    params?: HttpParams
+  ): Promise<R> {
+    return this.api.get<R>(`${this.name}/${id}/${action}/`, params);
   }
 
   postDetailAction<T>(

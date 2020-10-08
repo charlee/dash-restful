@@ -288,4 +288,58 @@ describe('DashResource', () => {
     expect(args[0]).toEqual('https://server/book/1/');
     expect(args[1]).toMatchObject({ method: 'DELETE' });
   });
+
+  test('.getAction() should call the list API with action name', () => {
+    r.getAction('barcode', params)
+      .then(handler)
+      .then(() => {
+        expect(handler).toHaveBeenCalledWith(response);
+      });
+
+    const args = fetchMocks.mock.calls[0];
+    expect(args[0]).toEqual('https://server/book/barcode/?params=params');
+    expect(args[1]).toMatchObject({ method: 'GET' });
+  });
+
+  test('.postAction() should call the list API with action name', () => {
+    r.postAction('assign', request, params)
+      .then(handler)
+      .then(() => {
+        expect(handler).toHaveBeenCalledWith(response);
+      });
+
+    const args = fetchMocks.mock.calls[0];
+    expect(args[0]).toEqual('https://server/book/assign/?params=params');
+    expect(args[1]).toMatchObject({
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  });
+
+  test('.getDetailAction() should call the detail API with action name', () => {
+    r.getDetailAction('barcode', 1, params)
+      .then(handler)
+      .then(() => {
+        expect(handler).toHaveBeenCalledWith(response);
+      });
+
+    const args = fetchMocks.mock.calls[0];
+    expect(args[0]).toEqual('https://server/book/1/barcode/?params=params');
+    expect(args[1]).toMatchObject({ method: 'GET' });
+  });
+
+  test('.postDetailAction() should call the detail API with action name', () => {
+    r.postDetailAction('assign', 1, request, params)
+      .then(handler)
+      .then(() => {
+        expect(handler).toHaveBeenCalledWith(response);
+      });
+
+    const args = fetchMocks.mock.calls[0];
+    expect(args[0]).toEqual('https://server/book/1/assign/?params=params');
+    expect(args[1]).toMatchObject({
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  });
 });
