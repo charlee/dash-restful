@@ -44,39 +44,134 @@ describe('DashAPI', () => {
   });
 
   describe('request', () => {
-    const response = { a: 1 };
+    const response = { res: 'res' };
+    const request = { req: 'req' };
+    const params = { params: 'params' };
+    const jsonHeaders = { 'Content-Type': 'application/json' };
+
     const handler = jest.fn();
     beforeEach(() => {
       fetchMocks.mockResponseOnce(JSON.stringify(response));
+      handler.mockReset();
     });
 
+    // Test the headers and options code of the `request` method
     test('request should send HTTP GET request', () => {
-      api.request<typeof response>('path', 'GET').then(handler);
+      api
+        .request<typeof response>('path', 'GET', { params })
+        .then(handler)
+        .then(() => {
+          expect(handler).toHaveBeenCalledWith(response);
+        });
 
-      expect(fetchMocks).toHaveBeenCalledWith('https://server/path', {
-        method: 'GET',
-        mode: 'cors',
-        headers: {},
-        credentials: 'include',
-      });
-
-      expect(handler).toHaveBeenCalledWith(response);
+      expect(fetchMocks).toHaveBeenCalledWith(
+        'https://server/path?params=params',
+        {
+          method: 'GET',
+          mode: 'cors',
+          headers: {},
+          credentials: 'include',
+        }
+      );
     });
 
+    // Test the headers and options code of the `request` method
     test('request should send HTTP POST request', () => {
       api
-        .request<typeof response>('path', 'POST', { body: { a: 1 } })
-        .then(handler);
+        .request<typeof response>('path', 'POST', { body: request })
+        .then(handler)
+        .then(() => {
+          expect(handler).toHaveBeenCalledWith(response);
+        });
 
       expect(fetchMocks).toHaveBeenCalledWith('https://server/path', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
         mode: 'cors',
         credentials: 'include',
-        body: JSON.stringify({ a: 1 }),
+        body: JSON.stringify(request),
       });
+    });
 
-      expect(handler).toHaveBeenCalledWith(response);
+    // Test the short-cut methods: GET
+    test('.get() should send HTTP GET request', () => {
+      api
+        .get<typeof response>('path')
+        .then(handler)
+        .then(() => {
+          expect(handler).toHaveBeenCalledWith(response);
+        });
+
+      expect(fetchMocks.mock.calls[0][1]).toMatchObject({
+        method: 'GET',
+        headers: {},
+      });
+    });
+
+    // Test the short-cut methods: POST
+    test('.post() should send HTTP POST request', () => {
+      const request = { b: 2 };
+      api
+        .post<typeof response>('path', request)
+        .then(handler)
+        .then(() => {
+          expect(handler).toHaveBeenCalledWith(response);
+        });
+
+      expect(fetchMocks.mock.calls[0][1]).toMatchObject({
+        method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify(request),
+      });
+    });
+
+    // Test the short-cut methods: PUT
+    test('.post() should send HTTP PUT request', () => {
+      const request = { b: 2 };
+      api
+        .put<typeof response>('path', request)
+        .then(handler)
+        .then(() => {
+          expect(handler).toHaveBeenCalledWith(response);
+        });
+
+      expect(fetchMocks.mock.calls[0][1]).toMatchObject({
+        method: 'PUT',
+        headers: jsonHeaders,
+        body: JSON.stringify(request),
+      });
+    });
+
+    // Test the short-cut methods: PATCH
+    test('.post() should send HTTP PATCH request', () => {
+      const request = { b: 2 };
+      api
+        .patch<typeof response>('path', request)
+        .then(handler)
+        .then(() => {
+          expect(handler).toHaveBeenCalledWith(response);
+        });
+
+      expect(fetchMocks.mock.calls[0][1]).toMatchObject({
+        method: 'PATCH',
+        headers: jsonHeaders,
+        body: JSON.stringify(request),
+      });
+    });
+
+    // Test the short-cut methods: DELETE
+    test('.get() should send HTTP DELETE request', () => {
+      api
+        .delete<typeof response>('path')
+        .then(handler)
+        .then(() => {
+          expect(handler).toHaveBeenCalledWith(response);
+        });
+
+      expect(fetchMocks.mock.calls[0][1]).toMatchObject({
+        method: 'DELETE',
+        headers: {},
+      });
     });
   });
 });

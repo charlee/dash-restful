@@ -6,8 +6,8 @@
       "type": "node",
       "request": "launch",
       "name": "Debug Active Spec",
-      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ava",
-      "runtimeArgs": ["debug", "--break", "--serial", "${file}"],
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/jest",
+      "runtimeArgs": ["debug", "${file}"],
       "port": 9229,
       "outputCapture": "std",
       "skipFiles": ["<node_internals>/**/*.js"],
@@ -19,11 +19,12 @@
       "type": "node",
       "request": "launch",
       "name": "Debug Active Spec (no build)",
-      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ava",
-      "runtimeArgs": ["debug", "--break", "--serial", "${file}"],
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/jest",
+      "runtimeArgs": ["debug", "${file}"],
       "port": 9229,
       "outputCapture": "std",
       "skipFiles": ["<node_internals>/**/*.js"]
       // "smartStep": true
-    }]
+    }
+  ]
 }
