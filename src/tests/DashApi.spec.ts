@@ -1,6 +1,6 @@
 import fetchMocks from 'jest-fetch-mock';
 
-import DashAPI, { urlparams } from '../lib/DashApi';
+import DashAPI, { DashResource, urlparams } from '../lib/DashApi';
 
 describe('urlparams', () => {
   test('it should construct the correct querystring', () => {
@@ -48,8 +48,8 @@ describe('DashAPI', () => {
     const request = { req: 'req' };
     const params = { params: 'params' };
     const jsonHeaders = { 'Content-Type': 'application/json' };
-
     const handler = jest.fn();
+
     beforeEach(() => {
       fetchMocks.mockResponseOnce(JSON.stringify(response));
       handler.mockReset();
@@ -173,5 +173,119 @@ describe('DashAPI', () => {
         headers: {},
       });
     });
+
+    // Test the createResource method
+    test('.createResource() should create a resource', () => {
+      const r = api.createResource('book');
+      r.list(params);
+      expect(fetchMocks.mock.calls[0][0]).toEqual(
+        'https://server/book/?params=params'
+      );
+    });
+  });
+});
+
+type Book = {
+  id: number;
+  name: string;
+};
+
+describe('DashResource', () => {
+  const response: Book = { id: 1, name: 'book 1' };
+  const request: Book = { id: 2, name: 'book 2' };
+  const params = { params: 'params' };
+  const handler = jest.fn();
+
+  let api: DashAPI;
+  let r: DashResource<Book>;
+
+  beforeEach(() => {
+    api = new DashAPI('https://server');
+    r = api.createResource<Book>('book');
+    handler.mockReset();
+    fetchMocks.resetMocks();
+    fetchMocks.mockResponseOnce(JSON.stringify(response));
+  });
+
+  test('.list() should call list API', () => {
+    r.list(params)
+      .then(handler)
+      .then(() => {
+        expect(handler).toHaveBeenCalledWith(response);
+      });
+
+    const args = fetchMocks.mock.calls[0];
+
+    expect(args[0]).toEqual('https://server/book/?params=params');
+    expect(args[1]).toMatchObject({ method: 'GET' });
+  });
+
+  test('.retrieve() should call retrieve API', () => {
+    r.retrieve(1)
+      .then(handler)
+      .then(() => {
+        expect(handler).toHaveBeenCalledWith(response);
+      });
+
+    const args = fetchMocks.mock.calls[0];
+    expect(args[0]).toEqual('https://server/book/1/');
+    expect(args[1]).toMatchObject({ method: 'GET' });
+  });
+
+  test('.create() should call create API', () => {
+    r.create(request)
+      .then(handler)
+      .then(() => {
+        expect(handler).toHaveBeenCalledWith(response);
+      });
+
+    const args = fetchMocks.mock.calls[0];
+    expect(args[0]).toEqual('https://server/book/');
+    expect(args[1]).toMatchObject({
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  });
+
+  test('.update() should call create API', () => {
+    r.update(1, request)
+      .then(handler)
+      .then(() => {
+        expect(handler).toHaveBeenCalledWith(response);
+      });
+
+    const args = fetchMocks.mock.calls[0];
+    expect(args[0]).toEqual('https://server/book/1/');
+    expect(args[1]).toMatchObject({
+      method: 'PUT',
+      body: JSON.stringify(request),
+    });
+  });
+
+  test('.patch() should call create API', () => {
+    r.patch(1, request)
+      .then(handler)
+      .then(() => {
+        expect(handler).toHaveBeenCalledWith(response);
+      });
+
+    const args = fetchMocks.mock.calls[0];
+    expect(args[0]).toEqual('https://server/book/1/');
+    expect(args[1]).toMatchObject({
+      method: 'PATCH',
+      body: JSON.stringify(request),
+    });
+  });
+
+  test('.delete() should call retrieve API', () => {
+    r.delete(1)
+      .then(handler)
+      .then(() => {
+        expect(handler).toHaveBeenCalledWith(response);
+      });
+
+    const args = fetchMocks.mock.calls[0];
+    expect(args[0]).toEqual('https://server/book/1/');
+    expect(args[1]).toMatchObject({ method: 'DELETE' });
   });
 });
