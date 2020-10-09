@@ -140,8 +140,8 @@ class DashAPI {
     return this.request<T>(path, 'POST', { params, formBody }) as Promise<T>;
   }
 
-  createResource<T>(name: string, params?: HttpParams) {
-    return new DashResource<T>(this, name, params);
+  createResource<T, TPlural = T[]>(name: string, params?: HttpParams) {
+    return new DashResource<T, TPlural>(this, name, params);
   }
 
   createCustomResource<T>(cls: ResourceClass<T>) {
@@ -152,7 +152,7 @@ class DashAPI {
 /**
  * params: The query params attached to all queries.
  */
-export class DashResource<T> {
+export class DashResource<T, TPlural = T[]> {
   constructor(
     protected api: DashAPI,
     protected name: string,
@@ -163,8 +163,8 @@ export class DashResource<T> {
     return { ...(this.params ?? {}), ...(params ?? {}) };
   }
 
-  list(params?: HttpParams): Promise<T[]> {
-    return this.api.get<T[]>(`${this.name}/`, this.mergeParams(params));
+  list(params?: HttpParams): Promise<TPlural> {
+    return this.api.get<TPlural>(`${this.name}/`, this.mergeParams(params));
   }
 
   retrieve(id: number): Promise<T> {
