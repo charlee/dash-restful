@@ -36,8 +36,8 @@ export type ApiRequestConfig = {
  * Convert params object to query string.
  * @param params params object
  */
-export const urlparams = (params: HttpParams) => {
-  const concatedParams = Object.keys(params).reduce<Record<string, string>>(
+export const urlParams = (params: HttpParams) => {
+  const mergedParams = Object.keys(params).reduce<Record<string, string>>(
     (acc, k) => {
       const v = params[k];
       // skip empty params
@@ -53,9 +53,9 @@ export const urlparams = (params: HttpParams) => {
     {}
   );
 
-  return Object.keys(concatedParams)
+  return Object.keys(mergedParams)
     .map((k) => {
-      const v = concatedParams[k];
+      const v = mergedParams[k];
       return `${encodeURIComponent(k)}=${encodeURIComponent(v)}`;
     })
     .join('&');
@@ -68,7 +68,7 @@ class DashAPI {
   }
 
   getUrl(path: string, params?: HttpParams) {
-    const qs = params ? urlparams(params) : undefined;
+    const qs = params ? urlParams(params) : undefined;
     return `${this.baseUrl}/${path}` + (qs ? `?${qs}` : '');
   }
 

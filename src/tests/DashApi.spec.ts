@@ -1,8 +1,8 @@
 import fetchMocks from 'jest-fetch-mock';
 
-import DashAPI, { DashResource, urlparams } from '../lib/DashApi';
+import DashAPI, { DashResource, urlParams } from '../lib/DashApi';
 
-describe('urlparams', () => {
+describe('urlParams', () => {
   test('it should construct the correct querystring', () => {
     const params = {
       a: 1,
@@ -15,7 +15,7 @@ describe('urlparams', () => {
       'h+i': 'h+i',
     };
 
-    const qs = urlparams(params);
+    const qs = urlParams(params);
     expect(qs).toEqual('a=1&b=2&c=3%2C4%2C5&d=a%2Cb%2Cc&h%2Bi=h%2Bi');
   });
 });
