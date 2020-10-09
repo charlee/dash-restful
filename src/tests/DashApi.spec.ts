@@ -98,6 +98,37 @@ describe('DashAPI', () => {
       });
     });
 
+    test('request should send formData correctly', () => {
+      api
+        .request<typeof response>('path', 'POST', {
+          formBody: {
+            name: 'nameValue',
+            file: {
+              file: new Blob(['test'], { type: 'text/plain' }), // in practical this should be a blob
+              filename: 'filenameValue',
+            },
+          },
+        })
+        .then(handler)
+        .then(() => {
+          expect(handler).toHaveBeenCalledWith(response);
+        });
+
+      const args = fetchMocks.mock.calls[0];
+      expect(args[1]).toMatchObject({
+        method: 'POST',
+      });
+
+      const fd = (args[1]?.body as unknown) as FormData;
+      expect(fd).toBeInstanceOf(FormData);
+      expect(fd.get('name')).toEqual('nameValue');
+
+      const file = fd.get('file') as File;
+      expect(file).toBeInstanceOf(File);
+      expect(file.name).toEqual('filenameValue');
+      expect(file.size).toEqual(4);
+    });
+
     // Test the short-cut methods: GET
     test('.get() should send HTTP GET request', () => {
       api
