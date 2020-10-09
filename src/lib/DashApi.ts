@@ -32,12 +32,14 @@ export type ApiRequestConfig = {
   form?: boolean;
 };
 
+export type ResourceClass<T> = new (api: DashAPI, ...others: unknown[]) => T;
+
 /**
  * Convert params object to query string.
  * @param params params object
  */
 export const urlParams = (params: HttpParams) => {
-  const mergedParams = Object.keys(params).reduce<Record<string, string>>(
+  const concatedParams = Object.keys(params).reduce<Record<string, string>>(
     (acc, k) => {
       const v = params[k];
       // skip empty params
@@ -53,9 +55,9 @@ export const urlParams = (params: HttpParams) => {
     {}
   );
 
-  return Object.keys(mergedParams)
+  return Object.keys(concatedParams)
     .map((k) => {
-      const v = mergedParams[k];
+      const v = concatedParams[k];
       return `${encodeURIComponent(k)}=${encodeURIComponent(v)}`;
     })
     .join('&');
@@ -140,6 +142,10 @@ class DashAPI {
 
   createResource<T>(name: string, params?: HttpParams) {
     return new DashResource<T>(this, name, params);
+  }
+
+  createCustomResource<T>(cls: ResourceClass<T>) {
+    return new cls(this);
   }
 }
 

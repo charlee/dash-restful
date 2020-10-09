@@ -2,6 +2,11 @@ import fetchMocks from 'jest-fetch-mock';
 
 import DashAPI, { DashResource, urlParams } from '../lib/DashApi';
 
+type Book = {
+  id: number;
+  name: string;
+};
+
 describe('urlParams', () => {
   test('it should construct the correct querystring', () => {
     const params = {
@@ -182,13 +187,28 @@ describe('DashAPI', () => {
         'https://server/book/?params=params'
       );
     });
+
+    // Test the createCustomResource method
+    test('.createCustomResource() should create a custom resource', () => {
+      const mockFn = jest.fn();
+      // Defile a custom resource
+      class TestResource extends DashResource<Book> {
+        constructor(protected api: DashAPI) {
+          super(api, 'book');
+        }
+
+        test = mockFn;
+      }
+
+      const testResource = api.createCustomResource(TestResource);
+      testResource.test();
+      expect(mockFn).toHaveBeenCalled();
+
+      testResource.list();
+      expect(fetchMocks.mock.calls[0][0]).toEqual('https://server/book/');
+    });
   });
 });
-
-type Book = {
-  id: number;
-  name: string;
-};
 
 describe('DashResource', () => {
   const response: Book = { id: 1, name: 'book 1' };
