@@ -1,6 +1,6 @@
 import fetchMocks from 'jest-fetch-mock';
 
-import DashAPI, { DashResource, urlParams } from '../lib/DashApi';
+import DashAPI, { ApiConfig, DashResource, urlParams } from '../lib/DashApi';
 
 type Book = {
   id: number;
@@ -61,7 +61,7 @@ describe('DashAPI', () => {
     });
 
     // Test the headers and options code of the `request` method
-    test('request should send HTTP GET request', (done) => {
+    test('.request() should send HTTP GET request', (done) => {
       api
         .request<typeof response>('path', 'GET', { params })
         .then(handler)
@@ -74,15 +74,13 @@ describe('DashAPI', () => {
         'https://server/path?params=params',
         {
           method: 'GET',
-          mode: 'cors',
           headers: {},
-          credentials: 'include',
         }
       );
     });
 
     // Test the headers and options code of the `request` method
-    test('request should send HTTP POST request', (done) => {
+    test('.request() should send HTTP POST request', (done) => {
       api
         .request<typeof response>('path', 'POST', { body: request })
         .then(handler)
@@ -94,8 +92,44 @@ describe('DashAPI', () => {
       expect(fetchMocks).toHaveBeenCalledWith('https://server/path', {
         method: 'POST',
         headers: jsonHeaders,
-        mode: 'cors',
-        credentials: 'include',
+        body: JSON.stringify(request),
+      });
+    });
+
+    // Test middlewares
+    test('.request() should call middlewares', () => {
+      api.addMiddleware((data) => ({
+        ...data,
+        options: {
+          ...data.options,
+          headers: {
+            ...data.options.headers,
+            'X-Test': 'a',
+            'X-CSRFToken': 'abcdefg',
+          },
+        },
+      }));
+
+      // add 2nd middleware to test overwrite
+      api.addMiddleware((data) => ({
+        ...data,
+        options: {
+          ...data.options,
+          headers: {
+            ...data.options.headers,
+            'X-Test': 'b',
+          },
+        },
+      }));
+
+      api.request<typeof response>('path', 'POST', { body: request });
+      expect(fetchMocks).toHaveBeenCalledWith('https://server/path', {
+        method: 'POST',
+        headers: {
+          ...jsonHeaders,
+          'X-Test': 'b',
+          'X-CSRFToken': 'abcdefg',
+        },
         body: JSON.stringify(request),
       });
     });
@@ -250,12 +284,12 @@ describe('DashAPI', () => {
 describe('request error cases', () => {
   let api: DashAPI;
   beforeEach(() => {
-    api = new DashAPI('https://server');
     fetchMocks.mockReset();
   });
 
   // 204
   test('.request() should return nothing if server returned 204', (done) => {
+    api = new DashAPI('https://server');
     fetchMocks.mockResponseOnce('', { status: 204 });
     api.request('path', 'POST', {}).then((res) => {
       expect(res).toBeUndefined();
@@ -266,6 +300,7 @@ describe('request error cases', () => {
   // other errors
   test('.request() should return nothing if server returned 204', (done) => {
     const error = { error: 'test_error' };
+    api = new DashAPI('https://server');
     fetchMocks.mockResponseOnce(JSON.stringify(error), { status: 400 });
     api.request('path', 'POST', {}).catch((res) => {
       expect(res).toBeInstanceOf(Response);
@@ -273,6 +308,24 @@ describe('request error cases', () => {
         expect(e).toEqual({ error: 'test_error' });
         done();
       });
+    });
+  });
+
+  // error handler
+  test('.request() should call error handler correctly if provided', (done) => {
+    const config: ApiConfig = {
+      errorHandler: (res: Response) => {
+        const error = res.status === 400 ? 'Invalid data' : 'Unknown error';
+        return Promise.reject(error);
+      },
+    };
+    api = new DashAPI('https://server', config);
+    const error = { error: 'test_error' };
+    fetchMocks.mockResponseOnce(JSON.stringify(error), { status: 400 });
+    api.request('path', 'POST', {}).catch((res: string) => {
+      expect(typeof res).toEqual('string');
+      expect(res).toEqual('Invalid data');
+      done();
     });
   });
 });

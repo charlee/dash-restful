@@ -32,7 +32,25 @@ export type ApiRequestConfig = {
   form?: boolean;
 };
 
+/**
+ * RequestData describes the data passed to `fetch` method.
+ * This data will be passed to middlewares for pre-fetch processing.
+ */
+export type RequestData = {
+  path: string;
+  params?: HttpParams;
+  options: RequestInit;
+};
+
 export type ResourceClass<T> = new (api: DashAPI, ...others: unknown[]) => T;
+
+export type Middleware = (requestConfig: RequestData) => RequestData;
+
+export type ErrorHandler = (res: Response) => Promise<never>;
+
+export type ApiConfig = {
+  errorHandler?: ErrorHandler;
+};
 
 /**
  * Convert params object to query string.
@@ -64,7 +82,15 @@ export const urlParams = (params: HttpParams) => {
 };
 
 class DashAPI {
-  constructor(private baseUrl: string = '/api') {
+  protected middlewares: Middleware[] = [];
+
+  /**
+   * Create a DashAPI instance.
+   * @param baseUrl The base url of the API.
+   * @param errorHandler An optional error handler that will be used when response status is not 2xx.
+   *                     This handler must return a rejected Promise.
+   */
+  constructor(private baseUrl: string = '/api', private config?: ApiConfig) {
     // trim trailing slash
     this.baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
   }
@@ -74,13 +100,13 @@ class DashAPI {
     return `${this.baseUrl}/${path}` + (qs ? `?${qs}` : '');
   }
 
+  addMiddleware(middleware: Middleware) {
+    this.middlewares.push(middleware);
+  }
+
   async request<T>(path: string, method: string, config?: ApiRequestConfig) {
     const headers: HeadersInit = {};
-    const options: RequestInit = {
-      method,
-      mode: 'cors',
-      credentials: 'include',
-    };
+    const options: RequestInit = { method };
 
     if (config?.body) {
       // Handle JSON post body
@@ -105,14 +131,33 @@ class DashAPI {
 
     options['headers'] = headers;
 
-    const response = await fetch(this.getUrl(path, config?.params), options);
+    let requestData: RequestData = {
+      path,
+      params: config?.params,
+      options,
+    };
+
+    // Apply middlewares
+    this.middlewares.forEach((middleware) => {
+      requestData = middleware(requestData);
+    });
+
+    // Send request
+    const response = await fetch(
+      this.getUrl(requestData.path, requestData.params),
+      requestData.options
+    );
 
     if (response.status === 204) {
       return;
     } else if (response.status >= 200 && response.status <= 299) {
       return response.json() as Promise<T>;
     } else {
-      return Promise.reject(response);
+      if (this.config?.errorHandler) {
+        return this.config.errorHandler(response);
+      } else {
+        return Promise.reject(response);
+      }
     }
   }
 
