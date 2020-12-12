@@ -50,6 +50,7 @@ export type ErrorHandler = (res: Response) => Promise<never>;
 
 export type ApiConfig = {
   errorHandler?: ErrorHandler;
+  options?: RequestInit;
 };
 
 /**
@@ -106,7 +107,7 @@ class DashAPI {
 
   async request<T>(path: string, method: string, config?: ApiRequestConfig) {
     const headers: HeadersInit = {};
-    const options: RequestInit = { method };
+    const options: RequestInit = { ...this.config?.options, method };
 
     if (config?.body) {
       // Handle JSON post body
