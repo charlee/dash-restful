@@ -2,6 +2,18 @@
 
 A JavaScript restful client using fetch interface.
 
+## Install
+
+```
+npm i dash-restful
+```
+
+or
+
+```
+yarn add dash-restful
+```
+
 ## Usage
 
 The simplest way is to create an API object and use it to access the endpoints:
