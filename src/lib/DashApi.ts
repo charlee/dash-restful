@@ -34,7 +34,7 @@ export type ApiRequestConfig = {
 
 /**
  * RequestData describes the data passed to `fetch` method.
- * This data will be passed to middlewares for pre-fetch processing.
+ * This data will be passed to middleware for pre-fetch processing.
  */
 export type RequestData = {
   path: string;
