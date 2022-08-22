@@ -34,7 +34,7 @@ export type ApiRequestConfig = {
 
 /**
  * RequestData describes the data passed to `fetch` method.
- * This data will be passed to middlewares for pre-fetch processing.
+ * This data will be passed to middleware for pre-fetch processing.
  */
 export type RequestData = {
   path: string;
@@ -186,8 +186,11 @@ class DashAPI {
     return this.request<T>(path, 'POST', { params, formBody }) as Promise<T>;
   }
 
-  createResource<T, TPlural = T[]>(name: string, params?: HttpParams) {
-    return new DashResource<T, TPlural>(this, name, params);
+  createResource<T, TPlural = T[], D = number>(
+    name: string,
+    params?: HttpParams
+  ) {
+    return new DashResource<T, TPlural, D>(this, name, params);
   }
 
   createCustomResource<T>(cls: ResourceClass<T>) {
@@ -198,7 +201,7 @@ class DashAPI {
 /**
  * params: The query params attached to all queries.
  */
-export class DashResource<T, TPlural = T[]> {
+export class DashResource<T, TPlural = T[], D = number> {
   constructor(
     protected api: DashAPI,
     protected name: string,
@@ -213,7 +216,7 @@ export class DashResource<T, TPlural = T[]> {
     return this.api.get<TPlural>(`${this.name}/`, this.mergeParams(params));
   }
 
-  retrieve(id: number): Promise<T> {
+  retrieve(id: D): Promise<T> {
     return this.api.get<T>(`${this.name}/${id}/`, this.params);
   }
 
@@ -221,15 +224,15 @@ export class DashResource<T, TPlural = T[]> {
     return this.api.post<T>(`${this.name}/`, object);
   }
 
-  update(id: number, object: Partial<T>): Promise<T> {
+  update(id: D, object: Partial<T>): Promise<T> {
     return this.api.put<T>(`${this.name}/${id}/`, object);
   }
 
-  patch(id: number, object: Partial<T>): Promise<T> {
+  patch(id: D, object: Partial<T>): Promise<T> {
     return this.api.patch<T>(`${this.name}/${id}/`, object);
   }
 
-  delete(id: number): Promise<void> {
+  delete(id: D): Promise<void> {
     return this.api.delete<void>(`${this.name}/${id}/`);
   }
 
@@ -245,17 +248,13 @@ export class DashResource<T, TPlural = T[]> {
     return this.api.post<R>(`${this.name}/${action}/`, body, params);
   }
 
-  getDetailAction<R>(
-    action: string,
-    id: number,
-    params?: HttpParams
-  ): Promise<R> {
+  getDetailAction<R>(action: string, id: D, params?: HttpParams): Promise<R> {
     return this.api.get<R>(`${this.name}/${id}/${action}/`, params);
   }
 
   postDetailAction<T>(
     action: string,
-    id: number,
+    id: D,
     body: Record<string, unknown>,
     params?: HttpParams
   ): Promise<T> {
